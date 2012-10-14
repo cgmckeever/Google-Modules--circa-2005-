@@ -1,0 +1,22 @@
+<messagebundle>
+<msg name="lang">pt-BR</msg>
+<msg name="title">Google Analytics</msg>
+<msg name="UPupdate_interval">Intervalo de Atualização </msg>
+<msg name="UPgraph_size">Tamanho do Gráfico</msg>
+<msg name="UPsmall">Pequeno</msg>
+<msg name="UPstandard">Padrão</msg>
+<msg name="daily">Diariamente </msg>
+<msg name="hourly">De hora em hora</msg>
+<msg name="view_days">Exibir Dias</msg>
+<msg name="refresh">Atualizar </msg>
+<msg name="refreshing">Atualizando</msg>
+<msg name="secure_check">Verificando Conexão Segura</msg>
+<msg name="secure_required">Conexão Segura Necessária</msg>
+<msg name="requesting_accounts">Solicitação de Contas</msg>
+<msg name="requesting">Solicitação</msg>
+<msg name="today">Hoje</msg>
+<msg name="average">Média</msg>
+<msg name="visits">Visitas</msg>
+<msg name="pageviews">Visualizações de Página</msg>
+<msg name="abbrevPV">Visualizações de Página</msg>
+</messagebundle>

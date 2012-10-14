@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 	
+<html>
+<head>
+<title>Surfaz! Free Anonymous Browsing.</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+</head>
+<body onload="document.getElementById('address_box').focus()">
+
+<div id="error"><p><b>URL Error (0)</b>: An error has occured while trying to browse through the proxy. <br />Failed to connect to the specified host. Possible problems are that the server was not found, the connection timed out, or the connection refused by the host. Try connecting again and check if the address is correct.</p></div>
+
+		
+<form action="index.php" method="post" name="form" id="form">
+<input id="search" type="text" name="q" value="http://www.privax.us/ip-test/" onfocus="this.select()" />
+<input id="submit" type="submit" value="Surf!" />
+<input type="hidden" name="hl[include_form]" value="1" />
+<input type="hidden" name="hl[remove_scripts]" value="1" />
+<input type="hidden" name="hl[accept_cookies]" value="1" />
+<input type="hidden" name="hl[show_images]" value="1" />
+<input type="hidden" name="hl[show_referer]" value="1" />
+<input type="hidden" name="hl[strip_meta]" value="1" />
+<input type="hidden" name="hl[session_cookies]" value="1" />
+</form>
+	
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-950416-28";
+urchinTracker();
+</script>
+
+</body>
+</html>

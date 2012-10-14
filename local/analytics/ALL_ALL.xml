@@ -1,0 +1,23 @@
+<messagebundle>
+  <msg name="lang">en</msg>
+  <msg name="title">Google Analytics</msg>
+  <msg name="UPupdate_interval">Update Interval</msg>
+  <msg name="UPgraph_size">Graph Size</msg>
+  <msg name="UPsmall">Small</msg>
+  <msg name="UPstandard">Standard</msg>
+  <msg name="daily">Daily</msg>
+  <msg name="hourly">Hourly</msg>
+  <msg name="view_days">View Days</msg>
+  <msg name="refresh">Refresh</msg>
+  <msg name="refreshing">Refreshing</msg>
+  <msg name="secure_check">Checking Secure Connection</msg>
+  <msg name="secure_required">Secure Connection Required</msg>
+  <msg name="requesting_accounts">Requesting Accounts</msg>
+  <msg name="requesting">Requesting</msg>
+  <msg name="today">Today</msg>
+  <msg name="average">Average</msg>
+  <!-- I wouldnt change these as graph is defined via the Google XML resultset -->
+  <msg name="visits">Visits</msg>
+  <msg name="pageviews">Pageviews</msg>
+  <msg name="abbrevPV">P/V</msg>
+</messagebundle>

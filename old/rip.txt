@@ -1,0 +1,29 @@
+EventList__MODULE_ID__ = EventList__MODULE_ID__.sort(function(a,b){return cmp__MODULE_ID__(a.startTS,b.startTS);});
+  renderCalendar__MODULE_ID__(EventList__MODULE_ID__);
+
+
+
+
+  var responseDOM = new XMLDoc(feedXML, function(error){if(XmlErrorOccurred__MODULE_ID__ == false) XmlErrorOccurred__MODULE_ID__ = true;});
+
+  if ( responseDOM == null || responseDOM.docNode == null){
+
+    if (feed_change__MODULE_ID__ == true){
+      feed_url__MODULE_ID__ = feed_url__MODULE_ID__.replace(/full$/,'basic');
+      // resend it
+      getFeed__MODULE_ID__();
+      return;
+    }
+
+    var spHTML = "<FONT style='color:red;font-size:.8em;'>The response from Google contained invalid XML.</FONT><BR><BR>";
+    _gel('status_content__MODULE_ID__').innerHTML = spHTML;
+    _gel('start_content__MODULE_ID__').style.display = '';
+    return;
+  } else feed_change__MODULE_ID__ = false;
+
+
+disHeight__MODULE_ID__ = prefs__MODULE_ID__.getString('DISPLAY_HEIGHT');
+  if (parseInt(disHeight__MODULE_ID__) != -1) _gel('calendar_content__MODULE_ID__').style.height = disHeight__MODULE_ID__ + "px";
+
+
+_gel("m___MODULE_ID___url").innerHTML = 'GCal - ' + calTitle;

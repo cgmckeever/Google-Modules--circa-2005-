@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Module>
+<ModulePrefs
+      title_url="http://www.crt.realtors.org/"
+      title="Listing Gadget"
+      description="Real Estate Property Listing Rotator.  Custmizable with a remote XML feed"
+      author="Chris McKeever"
+      author_location="Chicago"
+      author_email="cgmckeever@r2unit.com"
+      author_aboutme=""
+      author_quote=""
+      author_link="http://www.r2unit.com"
+      screenshot="http://r2unit.com/gmodule/image/babe.jpg"
+      thumbnail="http://r2unit.com/gmodule/image/Tbabe.jpg"
+      height="300"
+ />
+
+<UserPref name="UPfeedURL" display_name="Feed URL http://" default_value='www.r2unit.com/crt/gadget/listing.xml'/>
+<UserPref name="UPrefreshInt" display_name="Refresh Min." default_value='2'/>
+
+<Content type="html">
+<![CDATA[
+
+<DIV id="container__MODULE_ID__">
+<TABLE width="100%">
+<TR><TD align=right colspan=2>
+<SPAN style='font-size:10pt;text-decoration:underline;color:0000cc;cursor:pointer;' onclick='javascript:rotateListing__MODULE_ID__()'>Next</SPAN>
+</TD></TR>
+<TR><TD align=center colspan=2><DIV id="imgSRC__MODULE_ID__"><i>Loading Please Wait</i></DIV></TD></TR>
+<TR><TD colspan=2><DIV id="labelSRC__MODULE_ID__"></DIV></TD></TR>
+<TR><TD><DIV id="priceSRC__MODULE_ID__"></DIV></TD><TD align=right><DIV id="moreSRC__MODULE_ID__"></DIV></TD></TR>
+</TABLE>
+</DIV>
+
+
+<script>
+
+var to__MODULE_ID__; // timeout
+var image_height__MODULE_ID__ = 200;
+var image_width__MODULE_ID__ = 300;
+
+// Get user preferences
+var prefs__MODULE_ID__ = new _IG_Prefs(__MODULE_ID__); 
+var UPfeedURL__MODULE_ID__ = 'http://' + prefs__MODULE_ID__.getString('UPfeedURL');
+var UPrefreshInt__MODULE_ID__ = prefs__MODULE_ID__.getInt('UPrefreshInt');
+
+getFeed__MODULE_ID__();
+
+function getFeed__MODULE_ID__(){
+  clearTimeout(to__MODULE_ID__); // clear any timeout 
+  next_id__MODULE_ID__ = 0; // reset listing id
+  listing__MODULE_ID__ = new Array;
+  
+  // always request a fresh copy
+  var url = UPfeedURL__MODULE_ID__;
+  if (url.indexOf('?') == - 1){
+    url = url + '?' + new Date().getTime();
+  } else url = url + '&' + new Date().getTime();
+  
+  _IG_FetchXmlContent(url, function (response) {
+      if (response == null || typeof(response) != "object" || response.firstChild == null) {
+              _gel("labelSRC__MODULE_ID__").innerHTML = "<i>Invalid data.</i>";
+              return;
+      }
+      
+      // get listing nodes
+      var itemList__MODULE_ID__ = response.getElementsByTagName("listing");
+      
+      for (var i__MODULE_ID__ = 0; i__MODULE_ID__ < itemList__MODULE_ID__.length ; i__MODULE_ID__++) {
+        listing__MODULE_ID__[i__MODULE_ID__] = new Array;
+        listing__MODULE_ID__[i__MODULE_ID__]['label'] = itemList__MODULE_ID__.item(i__MODULE_ID__).getElementsByTagName('label').item(0).firstChild.nodeValue;
+        listing__MODULE_ID__[i__MODULE_ID__]['price'] = itemList__MODULE_ID__.item(i__MODULE_ID__).getElementsByTagName('price').item(0).firstChild.nodeValue;
+        listing__MODULE_ID__[i__MODULE_ID__]['image'] = itemList__MODULE_ID__.item(i__MODULE_ID__).getElementsByTagName('image').item(0).firstChild.nodeValue;
+        listing__MODULE_ID__[i__MODULE_ID__]['url'] = itemList__MODULE_ID__.item(i__MODULE_ID__).getElementsByTagName('url').item(0).firstChild.nodeValue;
+      }
+      
+      rotateListing__MODULE_ID__();
+      
+      
+  });
+   
+
+}
+
+function rotateListing__MODULE_ID__(){
+  if (next_id__MODULE_ID__ > listing__MODULE_ID__.length - 1) {
+    // already looped through everything, refresh list
+    getFeed__MODULE_ID__();
+    return; // asynchronous
+  }
+  
+  
+  // set image heights
+  var newImg__MODULE_ID__ = new Image();
+  newImg__MODULE_ID__.src = listing__MODULE_ID__[next_id__MODULE_ID__]['image'];
+  var height__MODULE_ID__ = newImg__MODULE_ID__.height;
+  var width__MODULE_ID__ = newImg__MODULE_ID__.width;
+  
+  while(width__MODULE_ID__ > image_width__MODULE_ID__ || height__MODULE_ID__ > image_height__MODULE_ID__){
+    if (width__MODULE_ID__ > image_width__MODULE_ID__){
+      height__MODULE_ID__ = image_width__MODULE_ID__ * height__MODULE_ID__ / width__MODULE_ID__;
+      width__MODULE_ID__ = image_width__MODULE_ID__;
+    }else if(height__MODULE_ID__ > image_height__MODULE_ID_){
+      width__MODULE_ID__ = image_height__MODULE_ID__ * width__MODULE_ID__ / height__MODULE_ID__;
+      height__MODULE_ID__ = image_height__MODULE_ID__;
+    }
+  }
+  
+  // do the display
+  _gel("imgSRC__MODULE_ID__").innerHTML = "<img src='" + listing__MODULE_ID__[next_id__MODULE_ID__]['image'] + "' border=0 height=" + height__MODULE_ID__ + " width=" + width__MODULE_ID__ + " />";
+  _gel("labelSRC__MODULE_ID__").innerHTML = listing__MODULE_ID__[next_id__MODULE_ID__]['label'];
+  _gel("priceSRC__MODULE_ID__").innerHTML = listing__MODULE_ID__[next_id__MODULE_ID__]['price'];
+  _gel("moreSRC__MODULE_ID__").innerHTML = "<a href='" + listing__MODULE_ID__[next_id__MODULE_ID__]['url'] + "' target='_blank'>Details...</a>";
+  
+
+  next_id__MODULE_ID__ ++;
+  clearTimeout(to__MODULE_ID__); // clear any timeout
+  to_id__MODULE_ID__ = setTimeout(rotateListing__MODULE_ID__, UPrefreshInt__MODULE_ID__ * 60 * 1000);
+}
+
+
+</script>
+
+
+]]>
+</Content>
+</Module>
+
+

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Module>
+<ModulePrefs
+      title_url="http://www.farecompare.com/"
+      title="Your Fare Compare"
+      description="Keep up to date with the lowest air rates found online with FareCompare"
+      author="Chris McKeever"
+      author_location="Chicago"
+      author_email="cgmckeever@r2unit.com"
+      author_link="http://www.farecompare.com"
+      screenshot="http://r2unit.com/gmodule/image/babe.jpg"
+      thumbnail="http://r2unit.com/gmodule/image/Tbabe.jpg"
+      render_inline="required"
+ />
+
+<UserPref name="UPconf" datatype="hidden" />
+
+<Content type="html">
+<![CDATA[
+
+<style>
+.tabON  { background-color:#99ccff;border-top:solid 1px #3333cc;border-right:solid 1px #3333cc;border-left:solid 1px #3333cc;font-weight:bold }
+.tabOFF { border-bottom:solid 1px #3333cc;background-color:#efefef;cursor: pointer; }
+</style>
+
+<script type=text/javascript src='http://suggest.farecompare.com/suggest/defaultDeparture?script'></script>
+
+<div id="containerDIV__MODULE_ID__" style="display:'';padding-top:2px;">
+   <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+     <td id="fareTAB__MODULE_ID__" align="center" class="tabON" onclick="javascript:toggleReport__MODULE_ID__('fare')" width=100>
+      Fare
+     </td>
+     <td style="border-bottom:solid 1px #3333cc;" width=1>&nbsp;</TD>
+     <td id="configureTAB__MODULE_ID__" align="center" class="tabOFF" onclick="javascript:toggleReport__MODULE_ID__('configure')" width=100>
+      Configure
+     </td>
+   </table>
+
+
+  <div id="fareDIV__MODULE_ID__" style="display:'';">
+   <img id='headerIMG__MODULE_ID__' src='' />
+  </div>
+  
+  <div id="configureDIV__MODULE_ID__" style="display:none;">
+  </div>
+
+</div> 
+
+
+<script>
+
+var domainBase = "r2unit.com/gmodule/devel/fare";
+
+http://suggest.farecompare.com/suggest/defaultDeparture?script
+
+// initialize module
+_IG_RegisterOnloadHandler(initialize__MODULE_ID__);
+
+function initialize__MODULE_ID__(){
+  _gel('headerIMG__MODULE_ID__').src = "http://" + domainBase + "/image/fc-header-logo.jpg";
+  getFare__MODULE_ID__("ATL","SFO");
+}
+
+
+function toggleReport__MODULE_ID__(view) {
+  var divView = new Array;
+  divView[0] = 'fare';
+  divView[1] = 'configure';
+  
+  for (var i=0; i < divView.length; i++) {
+    _gel(divView[i] + "DIV__MODULE_ID__").style['display'] = 'none';
+    _gel(divView[i] + "TAB__MODULE_ID__").className = 'tabOFF';
+    if (divView[i] == view) {
+      _gel(divView[i] + "DIV__MODULE_ID__").style['display'] = '';
+      _gel(divView[i] + "TAB__MODULE_ID__").className = 'tabON';
+    }
+  }
+  
+  return false;
+}
+
+function getFare__MODULE_ID__(dCode,dCodes){
+  var url = "http://rss.farecompare.com/rss/firefox-destinations?departure=" + dCode + "&destinations=" + dCodes;
+  _IG_FetchContent(url, function (responseText) {
+    var fares = eval("(" + responseText + ")");
+    alert(fares[0]);
+   });
+}
+
+// XMLhttpRequest
+function createRequestObject__MODULE_ID__() {
+  var ro;
+  ro = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+  return ro;
+}
+
+function getObjMethodClosure__MODULE_ID__(object, method) {
+  // shorthand object reference
+  return function(arg) {
+    return object[method](arg);
+  }
+}
+
+</script>
+
+]]>
+</Content>
+</Module>

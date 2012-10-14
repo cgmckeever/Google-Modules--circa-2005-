@@ -1,0 +1,138 @@
+<?php
+
+header("content-type: application/vnd.xml");
+print ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+
+?>
+
+<Module>
+<ModulePrefs 
+      title_url="http://www.google.com/calendar/render" 
+      title="Google Calendar"
+      description="Displays your google calendar on your google homepage"
+      author="Chris McKeever" 
+      author_location="Chicago" 
+      author_email="cgmckeever@r2unit.com" 
+      scrolling="true"
+      render_inline="required"
+      screenshot="http://r2unit.com/gmodule/image/gcalmodule.jpg"
+      thumbnail="http://r2unit.com/gmodule/image/Tgcalmodule.jpg"
+ />
+       
+
+<UserPref name="EVENTS_TO_SHOW"
+        display_name="Display Events"
+        datatype="enum"
+        default_value="5">
+    <EnumValue value="1" display_value="1"/>
+    <EnumValue value="3" display_value="3"/>
+    <EnumValue value="5" display_value="5"/>
+    <EnumValue value="7" display_value="7"/>
+    <EnumValue value="10" display_value="10"/>
+    <EnumValue value="15" display_value="15"/>
+    <EnumValue value="20" display_value="20"/>
+    <EnumValue value="30" display_value="30"/>
+    <EnumValue value="50" display_value="50"/>
+    <EnumValue value="100" display_value="a lot"/>
+    <EnumValue value="200" display_value="way too many"/>
+</UserPref>
+<UserPref name="DAYFORWARD"
+        display_name="Days Ahead"
+        datatype="enum"
+        default_value="90">
+    <EnumValue value="15" display_value="15"/>
+    <EnumValue value="30" display_value="30"/>
+    <EnumValue value="60" display_value="60"/>
+    <EnumValue value="90" display_value="90"/>
+    <EnumValue value="120" display_value="120"/>
+    <EnumValue value="150" display_value="150"/>
+    <EnumValue value="300" display_value="300"/>
+    <EnumValue value="365" display_value="365"/>
+    <EnumValue value="400" display_value="400"/>
+</UserPref>
+<UserPref name="DISPLAY_HEIGHT"
+        display_name="Display Height"
+        datatype="enum"
+        default_value="150">
+    <EnumValue value="75" display_value="Tiny"/>
+    <EnumValue value="150" display_value="Standard"/>
+    <EnumValue value="250" display_value="Slightly Bigger"/>
+    <EnumValue value="400" display_value="Bigger"/>
+    <EnumValue value="600" display_value="Even Bigger"/>
+    <EnumValue value="800" display_value="Biggest"/>
+    <EnumValue value="-1" display_value="Just Grow"/>
+</UserPref>
+<UserPref name="DISPLAY_FONT"
+        display_name="Display Font"
+        datatype="enum"
+        default_value="8">
+    <EnumValue value="8" display_value="Small"/>
+    <EnumValue value="10" display_value="Medium"/>
+    <EnumValue value="12" display_value="Large"/>
+    <EnumValue value="14" display_value="Super Size"/>
+</UserPref>
+<UserPref name="DLOCATION" display_name="Display Location"  datatype="bool" default_value="true" />
+<UserPref name="HIGHLIGHT_TODAY" display_name="Highlight Today's"  datatype="bool" default_value="true" />
+<UserPref name="DDAY_OF_WEEK" display_name="Display Day"  datatype="bool" default_value="true" />
+<UserPref name="DMONTH" display_name="Display Month"  datatype="bool" default_value="true" />
+<UserPref name="DDATE" display_name="Display Date"  datatype="bool" default_value="true" />
+<UserPref name="DYEAR" display_name="Display Year"  datatype="bool" default_value="true" />
+<UserPref name="DTIME" display_name="Display Time"  datatype="bool" default_value="true" />
+<UserPref name="DSINGLE" display_name="Single Line Format"  datatype="bool" default_value="false" />
+<UserPref name="GCAL_XML_FEED" display_name="Feed URL" />
+
+    
+<Content type="html">
+<![CDATA[
+
+<style>
+.gcalItem__MODULE_ID__ {color: #000000; font-size: 8pt;}
+.HgcalItem__MODULE_ID__ {color: #000000; font-size: 8pt;background-color:#FFFFCC}
+.GgcalItem__MODULE_ID__ {color: #000000; font-size: 8pt;background-color:#CCFF66}
+</style>
+
+<script src="http://mailqueue.googlepages.com/tinyxmldom.js"></script>
+<script src="http://r2unit.com/gmodule/pgcal.php?v=1&id=__MODULE_ID__"></script>
+
+<script>
+  // Get user preferences
+  var prefs__MODULE_ID__ = new _IG_Prefs(__MODULE_ID__);
+  // delays trigger till content is loaded
+  _IG_RegisterOnloadHandler(initialize__MODULE_ID__);
+
+
+</script>
+
+
+<DIV id=about__MODULE_ID__>
+<TABLE width=99% cellspacing=0 cellpadding=0 border=0><TR>
+
+<TD style="text-decoration:none;color:gray;font-size:8pt" valign=bottom align=left width='50'></TD>
+<TD align=center valign=bottom align=center><SPAN id="date_content__MODULE_ID__" style="font-size:.85em;"></SPAN></TD>
+<TD width='50' valign=bottom align=right></a></TD>
+
+</TR></TABLE>
+</DIV>
+
+<DIV id="status_content__MODULE_ID__" style="display:none;font-size:.85em;color:red">Loading Calendar...</DIV>
+<DIV id="calendar_content__MODULE_ID__" style="display:none;font-size:.85em;overflow: auto;"></DIV>
+
+
+<DIV id="start_content__MODULE_ID__" style="display:none;font-size:.85em;">
+&nbsp;Getting Started:
+    <ol>
+      <li />Click "edit" next to the title above 
+      <li />Set your preferences
+      <li />Enter your <A href='http://www.google.com/support/calendar/bin/answer.py?answer=37648&topic=8566' target='_blank'>Google Calendar Feed URL</A> 
+      <li />Feed URL works best as <A href='http://code.google.com/apis/gdata/calendar.html#Projection' target=_blank>'full'</A> which may not be available on shared Calendars.
+      <li />Click save, calendar should load 
+      <li />Stop missing your appointments
+    </ol>
+</DIV>
+
+
+]]>
+</Content>
+</Module>
+
+

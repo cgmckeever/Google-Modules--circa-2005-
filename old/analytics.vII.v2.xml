@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Module>
+<ModulePrefs
+      title_url="https://www.google.com/analytics/home"
+      title="Google Analytics"
+      description="Display Google Analytic Stats on your homepage.  Provides access to all profiles created in your account.  Set refresh interval for real time updates.  Requires you to be logged in securely at https://www.google.com/ig"
+      author="Chris McKeever"
+      author_location="Chicago"
+      author_email="cgmckeever@r2unit.com"
+      author_aboutme="Yada Yoda Yada Yoda"
+      author_quote="I guess I really do work for free! ;)"
+      author_link="http://www.r2unit.com"
+      screenshot="http://r2unit.com/gmodule/image/analytics.jpg"
+      thumbnail="http://r2unit.com/gmodule/image/Tanalytics.jpg"
+      render_inline="required"
+/>
+
+<UserPref name="UPint" display_name="Update Minutes" default_value="30" />
+<UserPref name="UPgraph"
+        display_name="Graph Size"
+        datatype="enum"
+        default_value="280x180">
+    <EnumValue value="280x180" display_value="Small"/>
+    <EnumValue value="350x225" display_value="Standard"/>
+</UserPref>
+
+<UserPref name="UPprofile" datatype="hidden"/>
+<UserPref name="UPaccount" datatype="hidden"/>
+<UserPref name="UPdayView" datatype="hidden"/>
+
+<Content type="html">
+<![CDATA[
+
+
+<div id="resultsDIV__MODULE_ID__" style="display:none">
+<table width="100%">
+<tr>
+<td valign='bottom'>
+ <div id="hourlyTab__MODULE_ID__" style="display:none">
+   <table cellpadding=0 cellspacing=0 border=0 width="99%">
+    <tr>
+     <td align="center" style="background-color:#99ccff;border-top:solid 1px #3333cc;border-right:solid 1px #3333cc;border-left:solid 1px #3333cc;" width=50>
+      <b>Hourly</b>
+     </td>
+     <td style="border-bottom:solid 1px #3333cc;" width=1>&nbsp;</TD>
+     <td align="center" style="border-bottom:solid 1px #3333cc;background-color:#efefef;" onclick="javascript:toggleReport__MODULE_ID__('daily')" width=50>
+      Daily
+     </td>
+   </table>
+ </div>
+ <div id="dailyTab__MODULE_ID__" style="display:none">
+   <table cellpadding=0 cellspacing=0 border=0 width="99%">
+    <tr>
+     <td align="center" style="border-bottom:solid 1px #66cc99;background-color:#efefef;" onclick="javascript:toggleReport__MODULE_ID__('hourly')" width=50>
+      Hourly
+     </td>
+     <td style="border-bottom:solid 1px #66cc99;" width=1>&nbsp;</TD>
+     <td align="center" style="background-color:#ccffcc;border-top:solid 1px #66cc99;border-right:solid 1px #66cc99;border-left:solid 1px #66cc99;" width=50>
+      <b>Daily</b>
+     </td>
+   </table>
+ </div>
+</td>
+<td align="right">
+<div id="accountDIV__MODULE_ID__"></div>
+<div id="profileDIV__MODULE_ID__"></div>
+</td>
+</tr>
+<tr>
+<td colspan=2>
+<div id="refreshDIV__MODULE_ID__" style="display:none"></div>
+</td>
+</tr>
+<tr>
+<td colspan=2 align=center>
+<div id="dailyDIV__MODULE_ID__" style="display:none">
+  <div id="viewDIV__MODULE_ID__">
+    View Days:&nbsp;<input type="text" id="dayView__MODULE_ID__" value="7" size=3/>
+    <input type="submit" value="Refresh" onclick="javascript:selectProfile__MODULE_ID__();">
+  </div>
+  <div id="dailyGraphDIV__MODULE_ID__"></div>
+</div>
+<div id="hourlyDIV__MODULE_ID__" style="display:none">
+  <div id="hourlyGraphDIV__MODULE_ID__"></div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+
+<div id="statusDIV__MODULE_ID__" style="display:none"></div>
+
+<script src="http://www.r2unit.com/gmodule/tinyxmldom.js"></script>
+
+<script>
+
+var loaded__MODULE_ID__ = false;                  // identified a complete load
+var statData__MODULE_ID__ = new Array();        // holds the statistics data
+var currentAccountID__MODULE_ID__ = 0;                 // keep track of which account is active (for refreshes)
+var currentProfileID__MODULE_ID__ = 0;                 // keep track of which profile is active (for refreshes)
+var statView__MODULE_ID__ = 'hourly';           // which tab is currently being displayed (for refreshes)
+var XmlErrorOccurred__MODULE_ID__;              // DOM object error
+var prefs__MODULE_ID__ = new _IG_Prefs(__MODULE_ID__);
+
+var IE__MODULE_ID__ = false;
+if (navigator.appName == "Microsoft Internet Explorer") IE__MODULE_ID__ = true;
+
+var domain__MODULE_ID__ = document.domain;
+var proto__MODULE_ID__ = document.location.toString().match(/[^:]*/);
+
+
+// initialize module
+_IG_RegisterOnloadHandler(initialize__MODULE_ID__);
+
+// starts the stat load
+function afterLoad__MODULE_ID__(){
+
+  _gel('statusDIV__MODULE_ID__').style.display = "none";
+  _gel('resultsDIV__MODULE_ID__').style.display = "";
+  selectAccount__MODULE_ID__();
+
+}
+
+// waits to make sure the accounts have all been loaded
+function checkLoad__MODULE_ID__(){
+  for (i in statData__MODULE_ID__){
+    loaded__MODULE_ID__ = (statData__MODULE_ID__[i]['status'] == 1) ? false : true;
+  }
+
+  if(loaded__MODULE_ID__ == false){
+    setTimeout("checkLoad__MODULE_ID__()",1000)
+  } else {
+    setTimeout("afterLoad__MODULE_ID__()",500)
+  }
+
+}
+
+function getStatistics__MODULE_ID__(type) {
+
+  statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['hourly']['status'] = 0; // clears result
+
+  // create our query dates
+  var nowTS    = new Date().getTime() - (1000 * 60 * 60 * 24) * 1; // this is for testing late at night ;)
+  var nowTS    = new Date().getTime();
+  var nowAr    = parseDate__MODULE_ID__(nowTS);
+  var nowStr   = nowAr['year'].toString() + nowAr['month'].toString() + nowAr['date'].toString();
+
+  if (type == 'hourly') {
+    // just grab hourly stats for today
+    var range = nowStr + "-" + nowStr;
+    var slice = "hourly";
+
+  } else {
+    var slice = 'daily';
+    var dayView = _gel('dayView__MODULE_ID__').value;
+
+    prefs__MODULE_ID__.set('UPdayView',dayView);
+    var startTS  = nowTS - (1000 * 60 * 60 * 24) * dayView;
+    var startAr  = parseDate__MODULE_ID__(startTS);
+    var startStr = startAr['year'].toString() + startAr['month'].toString() + startAr['date'].toString();
+    var range = startStr + "-" + nowStr;
+  }
+
+  var VisitsUrl = "https://www.google.com/analytics/reporting/export?id=" + currentProfileID__MODULE_ID__ + "&pdr=" + range + "&cmp=average&fmt=1&time=" + slice + "&rpt=VisitsReport&" + new Date().getTime();
+  var PVUrl = "https://www.google.com/analytics/reporting/export?id=" + currentProfileID__MODULE_ID__ + "&pdr=" + range + "&cmp=average&fmt=1&time=" + slice  + "&rpt=PageviewsReport&" + new Date().getTime();
+
+  var http = createRequestObject__MODULE_ID__();
+  http.onreadystatechange = function () { if (http.readyState == 4) getStatPV__MODULE_ID__(http.responseText,PVUrl,slice); }
+  http.open("GET", VisitsUrl, true);
+  http.send(null);
+
+}
+
+function getStatPV__MODULE_ID__(VisitData,PVUrl,slice){
+
+  var http = createRequestObject__MODULE_ID__();
+  http.onreadystatechange = function () { if (http.readyState == 4) OnStats__MODULE_ID__(http.responseText,VisitData,slice); }
+  http.open("GET", PVUrl, true);
+  http.send(null);
+
+}
+
+
+// check for secure connection
+// initiates the account discovery
+function initialize__MODULE_ID__(){
+
+  _gel('statusDIV__MODULE_ID__').innerHTML = "Checking Secure Connection.";
+  _gel('statusDIV__MODULE_ID__').style.display = "";
+
+  if (proto__MODULE_ID__ != "https"){
+    _gel('resultsDIV__MODULE_ID__').style.display = "none";
+    _gel('statusDIV__MODULE_ID__').innerHTML = "Secure Session Required.<br><a href='https://www.google.com/ig'>https://www.google.com/ig</a>";
+    _gel('statusDIV__MODULE_ID__').style.display = "";
+  }else {
+    // object shorthand
+    newNode__MODULE_ID__ = getObjMethodClosure__MODULE_ID__(document, "createElement");
+    requestAccount__MODULE_ID__();
+    var dayView = prefs__MODULE_ID__.getInt('UPdayView');
+    if (dayView != 0)  _gel('dayView__MODULE_ID__').value = dayView;
+  }
+}
+
+// grab accounts via REGEX
+// initiates the profile discovery
+function OnDataAccount__MODULE_ID__(response) {
+  // use regex to grab the blocks of text we're looking for
+  var reportMatch = new Array();
+  reportMatch = String(response.match(/name="account_list"[\s\S]*select>[^\S]/));
+  reportMatch = reportMatch.match(/value=".*"[^>]*>[^<]*/g);
+
+  if (String(reportMatch) == 'null') {
+    // login failed (or Google changed their page layout!)
+    _gel('resultsDIV__MODULE_ID__').style.display = "none";
+    _gel('loginDIV__MODULE_ID__').style.display = "";
+    _gel('statusDIV__MODULE_ID__').innerHTML = _gel('statusDIV__MODULE_ID__').innerHTML + "<br>Analytics has Changed - Failed.";
+    return;
+  } else {
+    // regex to strip account ID and name
+    //   matched pattern will be in the second [1] array element
+    var accountIDRE = /value="(.*)"/;
+    var accountRE = />(.*)/;
+
+    // account select box
+    var optionBox__MODULE_ID__ = newNode__MODULE_ID__('select');
+    optionBox__MODULE_ID__.id = 'accountSelect__MODULE_ID__';
+    optionBox__MODULE_ID__.onchange = selectAccount__MODULE_ID__;
+    var UPaccount = prefs__MODULE_ID__.getString('UPaccount');
+
+    for (var i=0; i < reportMatch.length; i++) {
+      var account = accountRE.exec(reportMatch[i]);
+      // alert(account);
+      var accountID = accountIDRE.exec(reportMatch[i]);
+      accountID = Number(accountID[1]);
+      // alert(accountID);
+      if (accountID != 0) {
+        statData__MODULE_ID__[accountID] = new Array();
+        statData__MODULE_ID__[accountID]['account'] = account[1];
+        statData__MODULE_ID__[accountID]['status'] = 1;
+        // alert(statData__MODULE_ID__[accountID]['account'] + "  " + accountID);
+
+        optionBox__MODULE_ID__[i] = new Option(account[1],accountID);
+        if (UPaccount == accountID) optionBox__MODULE_ID__.selectedIndex = i;
+
+        // grab the profiles for the account
+        requestProfile__MODULE_ID__(accountID);
+      }
+    }
+
+    var accountDiv__MODULE_ID__ = _gel("accountDIV__MODULE_ID__");
+    accountDiv__MODULE_ID__.appendChild(optionBox__MODULE_ID__);
+
+    setTimeout("checkLoad__MODULE_ID__()",1000)
+
+  }
+}
+
+
+// finds profiles based on regex
+function OnDataProfile__MODULE_ID__(response,accountID) {
+
+  // use regex to grab the blocks of text we're looking for
+  var reportMatch = new Array();
+  reportMatch = response.match(/<td class="list_cell">[^>]*>[^>]*>[^>]*/g);
+  // alert(reportMatch);
+
+  if (String(reportMatch) == 'null') {
+    // login failed (or Google changed their page layout!)
+    _gel('resultsDIV__MODULE_ID__').style.display = "none";
+    _gel('loginDIV__MODULE_ID__').style.display = "";
+    _gel('statusDIV__MODULE_ID__').innerHTML = _gel('statusDIV__MODULE_ID__').innerHTML + "<br>Analytics has Changed - Failed.";
+    return;
+  } else {
+    // regex to strip rid profiles from global match
+    //   matched pattern will be in the second [1] array element
+    var profileIDRE = /\?id=([^&"]*)/;
+    var profileRE = /<td class="list_cell">([^<]*)<\/td/;
+
+    // account select box
+    var optionBox__MODULE_ID__ = newNode__MODULE_ID__('select');
+    optionBox__MODULE_ID__.id = accountID + '_profileSelect__MODULE_ID__';
+    optionBox__MODULE_ID__.style.display = 'none';
+    optionBox__MODULE_ID__.onchange = selectProfile__MODULE_ID__;
+    var UPprofile = prefs__MODULE_ID__.getString('UPprofile');
+
+    for (var i=0; i < reportMatch.length; i++) {
+      // profile name
+      var profile = profileRE.exec(reportMatch[i]);
+      // alert(profile);
+      _gel('statusDIV__MODULE_ID__').innerHTML = _gel('statusDIV__MODULE_ID__').innerHTML + "<br>Requesting <b>"
+                                                + statData__MODULE_ID__[accountID]['account'] + "</b>:<br>&nbsp;&nbsp;&nbsp;" + profile;
+      var profileID = profileIDRE.exec(reportMatch[i]);
+      // alert(profileID);
+      profileID = profileID[1];
+
+      // statData array
+      statData__MODULE_ID__[accountID][profileID] = new Array();
+      statData__MODULE_ID__[accountID][profileID]['profile'] = profile[1];
+      statData__MODULE_ID__[accountID][profileID]['results'] = new Array();
+      statData__MODULE_ID__[accountID][profileID]['results']['daily'] = new Array();
+      statData__MODULE_ID__[accountID][profileID]['results']['daily']['status'] = 0;
+      statData__MODULE_ID__[accountID][profileID]['results']['daily']['data'] = new Array();
+      statData__MODULE_ID__[accountID][profileID]['results']['hourly'] = new Array();
+      statData__MODULE_ID__[accountID][profileID]['results']['hourly']['status'] = 0;
+      statData__MODULE_ID__[accountID][profileID]['results']['hourly']['data'] = new Array();
+
+      optionBox__MODULE_ID__[i] = new Option(profile[1],profileID);
+      if (UPprofile == profileID) optionBox__MODULE_ID__.selectedIndex = i;
+
+    }
+
+    var profileDiv__MODULE_ID__ = _gel("profileDIV__MODULE_ID__");
+    profileDiv__MODULE_ID__.appendChild(optionBox__MODULE_ID__);
+    statData__MODULE_ID__[accountID]['status'] = 0;  // flags a finished account
+
+  }
+
+}
+
+function OnStats__MODULE_ID__(PVData,VisitData,slice) {
+
+  var type = slice;
+
+  // Visits
+  var responseDOM = new XMLDoc(VisitData, function(error){
+                              if(XmlErrorOccurred__MODULE_ID__ == false)
+                              XmlErrorOccurred__MODULE_ID__ = true; } );
+
+  var results = new Array();
+  var reportNode = responseDOM.docNode.getElements("Report");
+  var HorizontalNode = reportNode[0].getElements("HorizontalBar");
+  var VisitData = HorizontalNode[0].getElements("Primary");
+
+  // PageViews
+  var responseDOM = new XMLDoc(PVData, function(error){
+                              if(XmlErrorOccurred__MODULE_ID__ == false)
+                              XmlErrorOccurred__MODULE_ID__ = true; } );
+
+  var results = new Array();
+  var reportNode = responseDOM.docNode.getElements("Report");
+  var HorizontalNode = reportNode[0].getElements("HorizontalBar");
+  var PVData = HorizontalNode[0].getElements("Primary");
+
+
+  for (var i=0; i < VisitData.length; i++) {
+    // asssume this crap lines up!!!
+    var visits = VisitData[i].getElements("Value")[0].getText();
+    visits = visits.replace(',','');
+    var pageviews = PVData[i].getElements("Value")[0].getText();
+    pageviews = pageviews.replace(',','');
+    var label = VisitData[i].getElements("Label")[0].getText();
+    if (type == 'daily'){
+      label = label.split(',');
+      label = label[1];
+    }else{
+      label = label.split(':');
+      label = label[0] + ":" + label[1];
+    }
+
+    var result = new Array();
+    result['visits'] = visits;
+    result['pageviews'] = pageviews;
+    result['labelX'] = label;
+    results[results.length] = result;
+  }
+
+  statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results'][type]['data'] = results;
+  statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results'][type]['status'] = 1;
+
+}
+
+// requests page for the account response
+function requestAccount__MODULE_ID__(){
+  _gel('statusDIV__MODULE_ID__').innerHTML = _gel('statusDIV__MODULE_ID__').innerHTML + "<br>Requesting Accounts.";
+
+  // get page with account list
+  var http = createRequestObject__MODULE_ID__();
+  var url = "https://" + domain__MODULE_ID__ + "/analytics/home/?et=reset&hl=en-US&ns=1" + new Date().getTime();
+
+  http.onreadystatechange = function () { if (http.readyState == 4) OnDataAccount__MODULE_ID__(http.responseText); }
+  http.open("GET", url, true);
+  http.send(null);
+
+}
+
+
+// request page with the profile information
+function requestProfile__MODULE_ID__(accountID){
+  // get page with profile list
+  var http = createRequestObject__MODULE_ID__();
+  var url = "https://" + domain__MODULE_ID__ + "/analytics/home/?ns=100&scid=" + accountID + "&" + new Date().getTime();
+
+  // alert(accountID);
+
+  http.onreadystatechange = function () { if (http.readyState == 4) OnDataProfile__MODULE_ID__(http.responseText,accountID); };
+  http.open("GET", url, true);
+  http.send(null);
+
+}
+
+// refreshes stats and can set a AUTO timeout to do another request
+function refreshStatistics__MODULE_ID__(setAuto){
+  _gel('viewDIV__MODULE_ID__').style.display = 'none';
+  _gel('refreshDIV__MODULE_ID__').innerHTML = "Refreshing...";
+  _gel('refreshDIV__MODULE_ID__').style.display = '';
+
+  getStatistics__MODULE_ID__('hourly');
+  getStatistics__MODULE_ID__('daily');
+
+  if (setAuto == true){
+    // grab the stats once, and again every half hour
+    var updateInt = prefs__MODULE_ID__.getInt('UPint');
+    setTimeout("refreshStatistics__MODULE_ID__(true)", updateInt * 60 * 1000);
+  }
+
+  showStatsHTML__MODULE_ID__();
+
+}
+
+// on select box change for accounts
+function selectAccount__MODULE_ID__(){
+
+  if (currentAccountID__MODULE_ID__ != 0) {_gel(currentAccountID__MODULE_ID__ + '_profileSelect__MODULE_ID__').style.display = "none";}
+
+  var accountSelect__MODULE_ID__ = _gel("accountSelect__MODULE_ID__");
+  currentAccountID__MODULE_ID__ = accountSelect__MODULE_ID__[accountSelect__MODULE_ID__.selectedIndex].value;
+
+  _gel(currentAccountID__MODULE_ID__ + '_profileSelect__MODULE_ID__').style.display = "";
+
+  // set last view
+  prefs__MODULE_ID__.set('UPaccount',currentAccountID__MODULE_ID__);
+
+  selectProfile__MODULE_ID__();
+
+}
+
+// on select box change for profiles
+function selectProfile__MODULE_ID__(refresh){
+
+  var profileSelect = _gel(currentAccountID__MODULE_ID__ + "_profileSelect__MODULE_ID__");
+  var profileID = profileSelect[profileSelect.selectedIndex].value;
+  // alert(profileID);
+
+  currentProfileID__MODULE_ID__ = profileID;
+  prefs__MODULE_ID__.set('UPprofile',currentProfileID__MODULE_ID__);
+
+  if (refresh == undefined) refresh = false;
+  refreshStatistics__MODULE_ID__(refresh);
+
+}
+
+
+function showStatsHTML__MODULE_ID__() {
+
+  if (statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['hourly']['status'] == 0 ||
+      statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['daily']['status'] == 0){
+      // laundry isnt done yet - please try again
+    setTimeout("showStatsHTML__MODULE_ID__()",100);
+    return;
+  }
+
+  _gel('refreshDIV__MODULE_ID__').style.display = 'none';
+  var profile = statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['profile'];
+
+  var graph = prefs__MODULE_ID__.getString('UPgraph');
+  graph = graph.split('x');
+
+  // build the hourly stats
+  var hourlyStats = '';
+  var hourlyTotPageview = 0;
+  var hourlyTotVisits = 0;
+  for (var i=0; i < statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['hourly']['data'].length; i++) {
+    hourlyStats += statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['hourly']['data'][i]['labelX'] + "\\t"
+                 + statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['hourly']['data'][i]['visits'] + "\\t"
+                 + statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['hourly']['data'][i]['pageviews'] + "\\n";
+    hourlyTotPageview += parseInt(statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['hourly']['data'][i]['pageviews']);
+    hourlyTotVisits += parseInt(statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['hourly']['data'][i]['visits']); }
+
+  var hourlyAvgPV = hourlyTotPageview / hourlyTotVisits;
+  hourlyAvgPV = hourlyAvgPV.toFixed(2);
+  hourlyStats = hourlyStats.replace(/\s/g,'%20');
+  hourlyStats = hourlyStats.replace(/\//g,'%2F');
+
+  // use the hourly stats to build the hourly flash object
+  var hourlyFLSH = '<object width="'+ graph[0] +'" height="'+ graph[1] +'" align="middle" id="UrchinGraph0" codebase="https://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000">';
+  hourlyFLSH += '<param value="sameDomain" name="allowScriptAccess"/>';
+  hourlyFLSH += '<param value="https://www.google.com/analytics/home/uflash/UrchinGraphMini.swf" name="movie"/>';
+  hourlyFLSH += '<param value="high" name="quality"/>';
+  hourlyFLSH += '<param value="#ffffff" name="bgcolor"/>';
+  hourlyFLSH += '<param value="transparent" name="wmode"/>';
+  if (IE__MODULE_ID__){
+    hourlyFLSH += '<param name="FlashVars" value="ntitle=Date%20Range&toggle=Show%20All|Hide%20All&vtitle=Visits&vtitle2=Pageviews&cnames=Date Range|Visits|Pageviews&datatype=20&rtitle=' + profile + ' (Today)&fsize=0&gtypes=mline&toptitle=Average: ' + hourlyAvgPV + ' P/V Visits: ' + hourlyTotVisits + ' Pageviews: ' + hourlyTotPageview + '&total=+' + hourlyTotVisits + '&uloc=us|$|0|2&xdata=' + hourlyStats + '" />';
+  }
+  hourlyFLSH += '<embed width="'+ graph[0] +'" height="'+ graph[1] +'" align="middle" ';
+  hourlyFLSH += 'pluginspage="http://www.macromedia.com/go/getflashplayer" ';
+  hourlyFLSH += 'type="application/x-shockwave-flash" ';
+  hourlyFLSH += 'allowscriptaccess="sameDomain" ';
+  if (!IE__MODULE_ID__){
+    hourlyFLSH += 'FlashVars="ntitle=Date%20Range&toggle=Show%20All|Hide%20All&vtitle=Visits&vtitle2=Pageviews&cnames=Date Range|Visits|Pageviews&datatype=20&rtitle=' + profile + ' (Today)&fsize=0&gtypes=mline&toptitle=Average: ' + hourlyAvgPV + ' P/V Visits: ' + hourlyTotVisits + ' Pageviews: ' + hourlyTotPageview + '&total=+' + hourlyTotVisits + '&uloc=us|$|0|2&xdata=' + hourlyStats + '"';
+  }
+  hourlyFLSH += 'wmode="transparent" name="UrchinGraph" bgcolor="#ffffff" quality="high" ';
+  hourlyFLSH += 'src="https://www.google.com/analytics/home/uflash/UrchinGraphMini.swf"/>';
+  hourlyFLSH += '</object>';
+
+  var dailyFLSH = 'Patience is a virtue...working on it<br>Google Changed Data Formats<br>Bad Google, Bad Google.';
+
+  // build the daily stats
+  var dailyStats = '';
+  var dailyTotPageview = 0;
+  var dailyTotVisits = 0;
+  for (var i=0; i < statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['daily']['data'].length; i++) {
+    dailyStats += statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['daily']['data'][i]['labelX']+ "\\t"
+                + statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['daily']['data'][i]['visits']+ "\\t"
+                + statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['daily']['data'][i]['pageviews'] + "\\n";
+    dailyTotPageview += parseInt(statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['daily']['data'][i]['pageviews']);
+    dailyTotVisits += parseInt(statData__MODULE_ID__[currentAccountID__MODULE_ID__][currentProfileID__MODULE_ID__]['results']['daily']['data'][i]['visits']); }
+
+  var dailyAvgPV = dailyTotPageview / dailyTotVisits;
+  dailyAvgPV = dailyAvgPV.toFixed(2);
+  dailyStats = dailyStats.replace(/\s/g,'%20');
+  dailyStats = dailyStats.replace(/\//g,'%2F');
+
+  // use the daily stats to build the daily flash object
+  var dailyFLSH = '<object width="'+ graph[0] +'" height="'+ graph[1] +'" align="middle" id="UrchinGraph0" codebase="https://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000">';
+  dailyFLSH += '<param value="sameDomain" name="allowScriptAccess"/>'
+  dailyFLSH += '<param value="https://www.google.com/analytics/home/uflash/UrchinGraphMini.swf" name="movie"/>'
+  dailyFLSH += '<param value="high" name="quality"/>'
+  dailyFLSH += '<param value="#ffffff" name="bgcolor"/>'
+  dailyFLSH += '<param value="transparent" name="wmode"/>'
+  if (IE__MODULE_ID__){
+    dailyFLSH += '<param name="FlashVars" value="ntitle=Date%20Range&toggle=Show%20All|Hide%20All&vtitle=Visits&vtitle2=Pageviews&cnames=Date Range|Visits|Pageviews&datatype=20&rtitle=' + profile + '&fsize=0&gtypes=mline&toptitle=Average: ' + dailyAvgPV + ' P/V Visits: ' + dailyTotVisits + ' Pageviews: ' + dailyTotPageview + '&total=+' + dailyTotVisits + '&uloc=us|$|0|2&xdata=' + dailyStats + '" />';
+  }
+  dailyFLSH += '<embed width="'+ graph[0] +'" height="'+ graph[1] +'" align="middle" '
+  dailyFLSH += 'pluginspage="http://www.macromedia.com/go/getflashplayer" '
+  dailyFLSH += 'type="application/x-shockwave-flash" '
+  dailyFLSH += 'allowscriptaccess="sameDomain" '
+  if (!IE__MODULE_ID__){
+    dailyFLSH += 'FlashVars="ntitle=Date%20Range&toggle=Show%20All|Hide%20All&vtitle=Visits&vtitle2=Pageviews&cnames=Date Range|Visits|Pageviews&datatype=20&rtitle=' + profile + '&fsize=0&gtypes=mline&toptitle=Average: ' + dailyAvgPV + ' P/V Visits: ' + dailyTotVisits + ' Pageviews: ' + dailyTotPageview + '&total=+' + dailyTotVisits + '&uloc=us|$|0|2&xdata=' + dailyStats + '"';
+  }
+  dailyFLSH += 'wmode="transparent" name="UrchinGraph" '
+  dailyFLSH += 'bgcolor="#ffffff" '
+  dailyFLSH += 'quality="high" '
+  dailyFLSH += 'src="https://www.google.com/analytics/home/uflash/UrchinGraphMini.swf"/>'
+  dailyFLSH += '</object>'
+
+
+  _gel("hourlyGraphDIV__MODULE_ID__").innerHTML = hourlyFLSH;
+  _gel("dailyGraphDIV__MODULE_ID__").innerHTML = dailyFLSH;
+
+  toggleReport__MODULE_ID__(statView__MODULE_ID__);
+
+}
+
+// toggle the graph DIV
+function toggleReport__MODULE_ID__(view) {
+  if (view == 'daily'){
+    statView__MODULE_ID__ = 'daily';
+    _gel('viewDIV__MODULE_ID__').style.display = '';
+    _gel("hourlyTab__MODULE_ID__").style['display'] = 'none';
+    _gel("hourlyDIV__MODULE_ID__").style['display'] = 'none';
+    _gel("dailyTab__MODULE_ID__").style['display'] = '';
+    _gel("dailyDIV__MODULE_ID__").style['display'] = '';
+  } else {
+    statView__MODULE_ID__ = 'hourly';
+    _gel('viewDIV__MODULE_ID__').style.display = 'none';
+    _gel("hourlyTab__MODULE_ID__").style['display'] = '';
+    _gel("hourlyDIV__MODULE_ID__").style['display'] = '';
+    _gel("dailyTab__MODULE_ID__").style['display'] = 'none';
+    _gel("dailyDIV__MODULE_ID__").style['display'] = 'none';
+  }
+
+  return false;
+}
+
+
+////////////////////////////////////////////////////////////////////////
+//  MISC
+///////////////////////////////////////////////////////////////////////
+
+function parseDate__MODULE_ID__(timestamp) {
+
+  var parsed = new Array;
+  var date = new Date(timestamp);
+
+  parsed['day'] = date.getDay();
+  parsed['month'] = date.getMonth() + 1;
+  parsed['date'] = date.getDate();
+  parsed['year'] = date.getFullYear();
+  parsed['hour'] = date.getHours();
+  parsed['minute'] = date.getMinutes();
+  parsed['second'] = date.getSeconds();
+  parsed['gmtOffset'] = date.getTimezoneOffset();
+  parsed['gmtPosition'] = (parsed['gmtOffset'] > 0) ? "-" : "+";
+
+  if (parsed['hour'].toString().length == 1) {
+    parsed['hour'] = '0' + parsed['hour']; }
+  if (parsed['minute'].toString().length == 1) {
+    parsed['minute'] = '0' + parsed['minute']; }
+  if (parsed['second'].toString().length == 1) {
+    parsed['second'] = '0' + parsed['second']; }
+  if (parsed['day'].toString().length == 1) {
+    parsed['day'] = '0' + parsed['day']; }
+  if (parsed['month'].toString().length == 1) {
+    parsed['month'] = '0' + parsed['month']; }
+  if (parsed['date'].toString().length == 1) {
+    parsed['date'] = '0' + parsed['date']; }
+  if (parsed['month'].toString().length == 1) {
+    parsed['month'] = '0' + parsed['month']; }
+
+  return parsed;
+}
+
+
+// XMLhttpRequest
+function createRequestObject__MODULE_ID__() {
+  var ro;
+  ro = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+  return ro;
+}
+
+function getObjMethodClosure__MODULE_ID__(object, method) {
+  // shorthand object reference
+  return function(arg) {
+    return object[method](arg);
+  }
+}
+
+function setGraphType() {};  // error with the Google Flash - bad form with no __MODULE_ID__ // I Know
+
+</script>
+
+
+]]>
+</Content>
+</Module>
+

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Module>
+<ModulePrefs
+      title_url="http://images.google.com/"
+      title="Babes of the Googledex"
+      description="Random Girl of the moment from a Google Image Search.  Please be forewarned that the image displayed is from the Google Image Index based on your search term suggestion.  One's and/or co-worker's personal opinion of the image may vary."
+      author="Chris McKeever"
+      author_location="Chicago"
+      author_email="cgmckeever@r2unit.com"
+      author_aboutme="I seem to be efficient at stumbling into little Google projects.  Outside of the Calendar Module (version 2 has dynamic calendar detection - update now!), I worked on one of the first recognized commerical integrations of Google Earth and Google Maps for Prudential Real Estate Chicago."
+      author_quote="I guess I really do work for free! ;)"
+      author_link="http://www.r2unit.com"
+      screenshot="http://r2unit.com/gmodule/image/babe.jpg"
+      thumbnail="http://r2unit.com/gmodule/image/Tbabe.jpg"
+>
+<Require feature="minimessage" />
+</ModulePrefs>
+
+<UserPref name="UPsearchTerm" display_name="Babe Search Term" default_value='"Jessica Alba" OR "Angelina Jolie"'/>
+<UserPref name="UPthumb" display_name="Thumbnail"  datatype="bool" default_value="false" />
+<UserPref name="UPrefreshInt" display_name="Refresh Min." default_value='10'/>
+
+<Content type="html">
+<![CDATA[
+
+<DIV id="container__MODULE_ID__">
+<TABLE width="100%"><TR><TD align=center>
+<DIV align='right' style='font-size:10pt;text-decoration:underline;color:0000cc;cursor:pointer;' onclick='javascript:getIMG__MODULE_ID__()'>I'm Impatient</DIV>
+<DIV id="imgSRC__MODULE_ID__"></DIV>
+</TD></TR></TABLE>
+
+</DIV>
+
+
+<script>
+
+var msg = new _IG_MiniMessage(__MODULE_ID__);
+
+var to;
+
+getIMG__MODULE_ID__();
+
+function getIMG__MODULE_ID__(){
+  var prefs__MODULE_ID__ = new _IG_Prefs(__MODULE_ID__); // Get user preferences
+  var UPsearchTerm__MODULE_ID__ = prefs__MODULE_ID__.getString('UPsearchTerm');
+  var UPthumb__MODULE_ID__ = prefs__MODULE_ID__.getBool('UPthumb');
+  var UPrefreshInt__MODULE_ID__ = prefs__MODULE_ID__.getInt('UPrefreshInt');
+
+  var start = Math.floor(Math.random()*10) * 10;
+  UPsearchTerm__MODULE_ID__ = escape(UPsearchTerm__MODULE_ID__);
+  var url__MODULE_ID__ = 'http://images.google.com/images?q=' + UPsearchTerm__MODULE_ID__ + '&start=' + start + '&ei=gvAORtaYPKGqiwHJvb28Aw&gbv=1&ei=xvAORuviBYGMiQHrlIT6AQ';
+
+  _IG_FetchContent(url__MODULE_ID__, function (responseText) {
+    // get content
+    var dynIMG = responseText.match(/images\?q=tbn:[^\s]*/g);
+    var fullInfo = responseText.match(/imgurl=[^<]*(?!<img)/g);
+
+    // get random image number
+    var resLen = dynIMG.length - 1;
+    imgNum =  Math.floor(Math.random()*resLen) + 1;
+
+    // create image links
+    var full = fullInfo[imgNum].toString().match(/imgurl=(.*)(?=&imgrefurl)/);
+    var fullSRC = full[1];
+    var thumbnail = "http://images.google.com/" + dynIMG[imgNum];
+    var thumbIMG = "<A href='" + fullSRC + "' target='_blank'><IMG src='" + thumbnail + "' border=0></A>"
+
+
+    // height and width
+    var hw = fullInfo[imgNum].toString().match(/h=([^&]*)&w=([^&]*)&sz/);
+    var h = hw[1];
+    var w = hw[2];
+    // max width/height size of module window
+    var wStrict = 280;
+    var hStrict = 225;
+
+    if (UPthumb__MODULE_ID__ == true){
+      _gel("imgSRC__MODULE_ID__").innerHTML = thumbIMG;
+    }else{
+      while(w > wStrict || h > hStrict){
+        if (w > wStrict){
+          h = wStrict * h / w;
+          w = wStrict;
+        }else if(h > hStrict){
+          w = hStrict * w / h;
+          h = hStrict;
+        }
+      }
+
+      _gel("imgSRC__MODULE_ID__").innerHTML = "<A href='" + fullSRC + "' target='_blank'><IMG id='fIMG__MODULE_ID__' src='' height='" + h + "' + width='" + w + "' border=0></A>";
+      _gel('fIMG__MODULE_ID__').onerror = function (){
+          _gel("imgSRC__MODULE_ID__").innerHTML = thumbIMG;
+      }
+      _gel('fIMG__MODULE_ID__').src = fullSRC;
+    }
+  });  // fetch
+
+  clearTimeout(to);
+  to = setTimeout(getIMG__MODULE_ID__, UPrefreshInt__MODULE_ID__ * 60 * 1000);
+}
+
+
+</script>
+
+
+]]>
+</Content>
+</Module>
+
+
